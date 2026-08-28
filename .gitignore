@@ -11,3 +11,6 @@
 /ResizeDemo/Win32/*
 /Demo/__recovery/*
 /Demo/OSX64/*
+*.delphilsp.json
+*.local
+*.dsv

@@ -633,7 +633,8 @@ begin
         FLabelHint.Text := FLabelHint.Text + ' (' + FMenuService.ShortCutToText(KS.ShortCut) + ')';
     end;
   end;
-  FPopupHint.Height := 28;
+  FLabelHint.RecalcSize;
+  FPopupHint.Height := FLabelHint.Height + 8 * 2;
   FPopupHint.Width := FLabelHint.Width + 8 * 2;
 
   FPopupHint.Placement := TPlacement.absolute;
@@ -703,8 +704,46 @@ begin
       end;
 end;
 
-procedure TWinUIForm.MouseDown(Button: TMouseButton; Shift: TShiftState; AFormX, AFormY: Single);
-begin
+procedure TWinUIForm.MouseDown(Button: TMouseButton; Shift: TShiftState; AFormX, AFormY: Single);    {
+var
+  LocalPoint: TPointF;
+  Obj: IControl;
+  SG: ISizeGrip;
+  NewCursor: TCursor;  }
+begin     {
+  Engage;
+  try
+
+    var FMousePos := TPointF.Create(AFormX, AFormY);
+    var FDownPos := FMousePos;
+    NewCursor := Cursor;  // use the form cursor only if no control has been clicked
+    Obj := ObjectAtPoint(ClientToScreen(FMousePos));
+    if Obj <> nil then
+    begin
+      LocalPoint := Obj.ScreenToLocal(ClientToScreen(FMousePos));
+      if Supports(Obj, ISizeGrip, SG) and (WindowState <> TWindowState.wsMaximized) then
+      begin
+        Obj.MouseDown(Button, Shift, LocalPoint.X, LocalPoint.Y);
+        StartWindowResize;
+      end
+      else
+      begin
+        if (Obj.DragMode = TDragMode.dmAutomatic) and (Button = TMouseButton.mbLeft) then
+          Obj.BeginAutoDrag
+        else
+          Obj.MouseDown(Button, Shift, LocalPoint.X, LocalPoint.Y);
+        if ClientRect.Contains(FMousePos) then
+          NewCursor := Obj.Cursor;
+      end
+    end
+    else
+      DoMouseDown(Button, Shift, AFormX, AFormY);
+
+    if FCursorService <> nil then
+      FCursorService.SetCursor(NewCursor);
+  finally
+    Disengage;
+  end;      }
   FModeFocus := False;
   Invalidate;
   inherited;

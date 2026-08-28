@@ -156,6 +156,7 @@ object FormMusic: TFormMusic
       end
       object Button8: TButton
         Align = Left
+        Hint = 'fsdfsdf'
         Position.X = 108.000000000000000000
         Position.Y = 50.000000000000000000
         Size.Width = 50.000000000000000000
@@ -167,6 +168,7 @@ object FormMusic: TFormMusic
       end
       object ButtonPlayPause: TButton
         Align = Left
+        Hint = 'sdfsdf'
         Margins.Left = 4.000000000000000000
         Margins.Right = 4.000000000000000000
         Position.X = 54.000000000000000000
