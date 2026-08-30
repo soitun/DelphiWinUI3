@@ -72,6 +72,8 @@ type
     FButtonMax: TStyledControl;
     FWindowCaptionColor: TColor;
     FStayOnTop: Boolean;
+    FSubscribeToChangeStyleBook: Boolean;
+    FChangeStyleBookMsgId: Int64;
     {$IFDEF MSWINDOWS}
     FWindowHandle: HWND;
     {$ENDIF}
@@ -90,6 +92,7 @@ type
     procedure SetWindowCaptionColorInternal(const Value: TColor);
     procedure SetIconControl(const Value: TControl);
     procedure SetStayOnTop(const Value: Boolean);
+    procedure SetSubscribeToChangeStyleBook(const Value: Boolean);
   protected
     procedure PaintRects(const UpdateRects: array of TRectF); override;
     procedure CreateHandle; override;
@@ -163,6 +166,7 @@ type
     property FocusInflate: Single read FFocusInflate write SetFocusInflate;
     property AutoScrollToFocused: Boolean read FAutoScrollToFocused write SetAutoScrollToFocused;
     property StayOnTop: Boolean read FStayOnTop write SetStayOnTop;
+    property SubscribeToChangeStyleBook: Boolean read FSubscribeToChangeStyleBook write SetSubscribeToChangeStyleBook;
   end;
 
 implementation
@@ -453,6 +457,8 @@ end;
 
 destructor TWinUIForm.Destroy;
 begin
+  if FChangeStyleBookMsgId <> 0 then
+    TMessageManager.DefaultManager.Unsubscribe(TStyleChangedMessage, FChangeStyleBookMsgId);
   TMessageManager.DefaultManager.Unsubscribe(TMainCaptionChangedMessage, FSubs1);
   TMessageManager.DefaultManager.Unsubscribe(TInternalSettingChangedMessage, FSubs2);
   TMessageManager.DefaultManager.Unsubscribe(TFormActivateMessage, FSubs3);
@@ -898,6 +904,26 @@ begin
   else
     FormStyle := TFormStyle.Normal;
   {$ENDIF}
+end;
+
+procedure TWinUIForm.SetSubscribeToChangeStyleBook(const Value: Boolean);
+begin
+  FSubscribeToChangeStyleBook := Value;
+  if FSubscribeToChangeStyleBook then
+  begin
+    FChangeStyleBookMsgId := TMessageManager.DefaultManager.SubscribeToMessage(TStyleChangedMessage,
+      procedure(const Sender: TObject; const M: TMessage)
+      begin
+        if not (M is TStyleChangedMessage) then
+          Exit;
+        StyleBook := TStyleChangedMessage(M).Value;
+      end);
+  end
+  else if FChangeStyleBookMsgId <> 0 then
+  begin
+    TMessageManager.DefaultManager.Unsubscribe(TStyleChangedMessage, FChangeStyleBookMsgId);
+    FChangeStyleBookMsgId := 0;
+  end;
 end;
 
 procedure TWinUIForm.SetSystemWindowControls(const AClose, AMax, AMin: TStyledControl);
