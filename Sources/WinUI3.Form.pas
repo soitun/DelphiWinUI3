@@ -76,6 +76,7 @@ type
     FChangeStyleBookMsgId: Int64;
     {$IFDEF MSWINDOWS}
     FWindowHandle: HWND;
+    FSystemButtonsContainer: TControl;
     {$ENDIF}
     procedure SetFocusCorners(const Value: TCorners);
     procedure SetFocusCornerType(const Value: TCornerType);
@@ -93,6 +94,7 @@ type
     procedure SetIconControl(const Value: TControl);
     procedure SetStayOnTop(const Value: Boolean);
     procedure SetSubscribeToChangeStyleBook(const Value: Boolean);
+    procedure SetSystemButtonsContainer(const Value: TControl);
   protected
     procedure PaintRects(const UpdateRects: array of TRectF); override;
     procedure CreateHandle; override;
@@ -152,6 +154,7 @@ type
     /// </summary>
     property TitleControls: TArray<TControl> read FTitleControls write SetTitleControls;
     property IconControl: TControl read FIconControl write SetIconControl;
+    property SystemButtonsContainer: TControl read FSystemButtonsContainer write SetSystemButtonsContainer;
     property HideTitleBar: Boolean read FHideTitleBar write SetHideTitleBar;
     /// <summary>
     /// Enables/disables the highlight of the control in focus when using the keyboard (Tab)
@@ -873,6 +876,12 @@ begin
     WindowCaptionColor := TColors.SysDefault;
   InvalidateNonClient;
   {$ENDIF}
+
+  for var Item in TitleControls do
+    Item.Visible := FHideTitleBar;
+
+  if Assigned(FSystemButtonsContainer) then
+    FSystemButtonsContainer.Visible := FHideTitleBar;
 end;
 
 procedure TWinUIForm.SetIconControl(const Value: TControl);
@@ -924,6 +933,11 @@ begin
     TMessageManager.DefaultManager.Unsubscribe(TStyleChangedMessage, FChangeStyleBookMsgId);
     FChangeStyleBookMsgId := 0;
   end;
+end;
+
+procedure TWinUIForm.SetSystemButtonsContainer(const Value: TControl);
+begin
+  FSystemButtonsContainer := Value;
 end;
 
 procedure TWinUIForm.SetSystemWindowControls(const AClose, AMax, AMin: TStyledControl);
